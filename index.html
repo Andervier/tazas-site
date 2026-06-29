@@ -37,13 +37,44 @@
     border-bottom: 1px solid rgba(65, 36, 4, 0.08);
   }
   .nav { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; max-width: 1100px; margin: 0 auto; }
-  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 20px; color: var(--brown-1); text-decoration: none; }
-  .brand-mark { width: 36px; height: 36px; border-radius: 10px; object-fit: cover; display: block; }
+  .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 24px; color: var(--brown-1); text-decoration: none; }
+  .brand-mark { width: 44px; height: 44px; border-radius: 12px; object-fit: cover; display: block; }
   .nav a.cta { background: var(--brown-1); color: var(--cream); padding: 10px 18px; border-radius: 999px; text-decoration: none; font-weight: 600; font-size: 14px; transition: transform .15s ease, background .15s ease; }
   .nav a.cta:hover { transform: translateY(-1px); background: var(--brown-2); }
 
-  .hero { padding: 80px 0 60px; position: relative; }
-  .hero-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 60px; align-items: center; }
+  .hero {
+    padding: 80px 0 60px;
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    --mx: 30%;
+    --my: 40%;
+  }
+  .hero::before, .hero::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(70px);
+    opacity: 0.55;
+    pointer-events: none;
+    z-index: -1;
+    transition: transform .35s cubic-bezier(.2,.7,.2,1);
+    will-change: transform;
+  }
+  .hero::before {
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(239, 159, 39, 0.7), rgba(239, 159, 39, 0) 70%);
+    left: calc(var(--mx) - 260px);
+    top: calc(var(--my) - 260px);
+  }
+  .hero::after {
+    width: 420px; height: 420px;
+    background: radial-gradient(circle, rgba(216, 90, 48, 0.45), rgba(216, 90, 48, 0) 70%);
+    left: calc(100% - var(--mx) - 210px);
+    top: calc(100% - var(--my) - 210px);
+    opacity: 0.45;
+  }
+  .hero-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 60px; align-items: center; position: relative; z-index: 1; }
   .pill { display: inline-block; background: rgba(239, 159, 39, 0.15); color: var(--brown-3); padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; margin-bottom: 20px; animation: fadeUp .6s ease both; }
   h1 { font-size: clamp(36px, 5vw, 56px); line-height: 1.1; font-weight: 800; color: var(--brown-1); margin-bottom: 20px; animation: fadeUp .6s ease .1s both; }
   h1 .accent { color: var(--brown-3); }
@@ -310,6 +341,31 @@
     });
   }
   setInterval(tick, 2200);
+
+  const hero = document.querySelector('.hero');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (hero && !reduce) {
+    let tx = 30, ty = 40, cx = 30, cy = 40, raf = null;
+    function loop() {
+      cx += (tx - cx) * 0.08;
+      cy += (ty - cy) * 0.08;
+      hero.style.setProperty('--mx', cx + '%');
+      hero.style.setProperty('--my', cy + '%');
+      if (Math.abs(tx - cx) > 0.1 || Math.abs(ty - cy) > 0.1) {
+        raf = requestAnimationFrame(loop);
+      } else { raf = null; }
+    }
+    hero.addEventListener('pointermove', (e) => {
+      const r = hero.getBoundingClientRect();
+      tx = ((e.clientX - r.left) / r.width) * 100;
+      ty = ((e.clientY - r.top) / r.height) * 100;
+      if (!raf) raf = requestAnimationFrame(loop);
+    });
+    hero.addEventListener('pointerleave', () => {
+      tx = 30; ty = 40;
+      if (!raf) raf = requestAnimationFrame(loop);
+    });
+  }
 </script>
 
 </body>
